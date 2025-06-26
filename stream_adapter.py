@@ -3,26 +3,26 @@ from typing import List
 PAD_VALUE_MAX = 2
 
 class StreamAdapter:
-    def __init__(self, message_size: int):
+    def __init__(self, chunk_size: int):
         self.next_pad_value = 1
-        self.message_size = message_size
+        self.chunk_size = chunk_size
 
-    def get_stream_chunks(self, chunk: List[int]) -> List[List[int]]:
-        if not chunk:
+    def get_stream_chunks(self, message: List[int]) -> List[List[int]]:
+        if not message:
             return []
         
-        chunk = self.replace_sequence(chunk, [5,5,5], [6,6,6])
+        message = self.replace_sequence(message, [5,5,5], [6,6,6])
         
         if self.next_pad_value > 1:
-            chunk = list(range(self.next_pad_value, PAD_VALUE_MAX + 1)) + chunk
+            message = list(range(self.next_pad_value, PAD_VALUE_MAX + 1)) + message
             self.next_pad_value = 1
 
-        messages = [chunk[i:i + self.message_size] for i in range(0, len(chunk), self.message_size)]
+        chunks = [message[i:i + self.chunk_size] for i in range(0, len(message), self.chunk_size)]
 
-        if len(messages[-1]) < self.message_size:
-            messages[-1] = self.pad_message(messages[-1])
+        if len(chunks[-1]) < self.chunk_size:
+            chunks[-1] = self.pad_chunck(chunks[-1])
 
-        return messages
+        return chunks
     
     def replace_sequence(self, nums: list[int], target: list[int], replacement: list[int]) -> list[int]:
         result = []
@@ -40,9 +40,9 @@ class StreamAdapter:
         return result
 
 
-    def pad_message(self, message: List[int]) -> List[int]:
-        amount_to_pad = self.message_size - len(message)
-        result = message.copy()
+    def pad_chunck(self, chunk: List[int]) -> List[int]:
+        amount_to_pad = self.chunk_size - len(chunk)
+        result = chunk.copy()
         
         for _ in range(amount_to_pad):
             result.append(self.next_pad_value)

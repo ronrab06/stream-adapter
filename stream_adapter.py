@@ -1,11 +1,11 @@
 from typing import List
 
 PAD_VALUE_MAX = 2
-MESSAGE_SIZE = 12
 
 class StreamAdapter:
-    def __init__(self):
+    def __init__(self, message_size: int):
         self.next_pad_value = 1
+        self.message_size = message_size
 
     def get_stream_chunks(self, chunk: List[int]) -> List[List[int]]:
         if not chunk:
@@ -17,9 +17,9 @@ class StreamAdapter:
             chunk = list(range(self.next_pad_value, PAD_VALUE_MAX + 1)) + chunk
             self.next_pad_value = 1
 
-        messages = [chunk[i:i + MESSAGE_SIZE] for i in range(0, len(chunk), MESSAGE_SIZE)]
+        messages = [chunk[i:i + self.message_size] for i in range(0, len(chunk), self.message_size)]
 
-        if len(messages[-1]) < MESSAGE_SIZE:
+        if len(messages[-1]) < self.message_size:
             messages[-1] = self.pad_message(messages[-1])
 
         return messages
@@ -41,7 +41,7 @@ class StreamAdapter:
 
 
     def pad_message(self, message: List[int]) -> List[int]:
-        amount_to_pad = MESSAGE_SIZE - len(message)
+        amount_to_pad = self.message_size - len(message)
         result = message.copy()
         
         for _ in range(amount_to_pad):

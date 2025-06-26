@@ -1,9 +1,9 @@
 import pytest
-from stream_adapter import StreamAdapter, MESSAGE_SIZE, PAD_VALUE_MAX
+from stream_adapter import StreamAdapter, PAD_VALUE_MAX
 
 @pytest.fixture
 def adapter():
-    return StreamAdapter()
+    return StreamAdapter(12)
 
 def test_empty_chunk_input(adapter):
     result = adapter.get_stream_chunks([])
@@ -12,7 +12,7 @@ def test_empty_chunk_input(adapter):
     assert adapter.next_pad_value == 1
 
 def test_exact_msg_size(adapter):
-    input_chunk = list(range(MESSAGE_SIZE))
+    input_chunk = list(range(adapter.message_size))
     result = adapter.get_stream_chunks(input_chunk)
 
     assert result == [input_chunk]
@@ -105,4 +105,23 @@ def test_replace_555_with_666_twice_in_a_row(adapter):
     result = adapter.get_stream_chunks(chunk)
     expected = [[6, 6, 6, 6, 6, 6, 5, 1, 2, 1, 2, 1]]
 
+    assert result == expected
+
+def test_message_size_6():
+    adapter = StreamAdapter(6)
+    chunk = list(range(1, 8))
+    result = adapter.get_stream_chunks(chunk)
+    expected = [
+        list(range(1, 7)),
+        [7, 1, 2, 1, 2, 1]
+    ]
+
+    assert result == expected
+    assert adapter.next_pad_value == 2
+
+    second_chunk = list(range(8, 11))
+    result = adapter.get_stream_chunks(second_chunk)
+    expected = [[2, 8, 9, 10, 1, 2]]
+
+    assert adapter.next_pad_value == 1
     assert result == expected
